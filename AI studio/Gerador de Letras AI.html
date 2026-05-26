@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Lyrics Studio</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .studio-shell {
+      min-height: 100%;
+      width: 100%;
+      overflow: auto;
+      position: relative;
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+
+    .dark-shell {
+      background:
+        radial-gradient(circle at 12% 12%, rgba(128, 0, 32, 0.55), transparent 34%),
+        radial-gradient(circle at 82% 18%, rgba(190, 150, 95, 0.18), transparent 30%),
+        linear-gradient(135deg, #080506 0%, #1a090d 44%, #060606 100%);
+      color: #f3e6d3;
+    }
+
+    .light-shell {
+      background:
+        radial-gradient(circle at 10% 10%, rgba(128, 0, 32, 0.18), transparent 34%),
+        radial-gradient(circle at 80% 18%, rgba(190, 150, 95, 0.34), transparent 30%),
+        linear-gradient(135deg, #f4e8d4 0%, #fff7eb 48%, #e8d5b6 100%);
+      color: #16080b;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,.10) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: radial-gradient(circle at center, black, transparent 78%);
+    }
+
+    .glass {
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(244, 232, 212, 0.18);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+      transition: background 0.35s ease, border 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .dark-shell .glass {
+      background: rgba(20, 8, 10, 0.80);
+    }
+
+    .light-shell .glass {
+      background: rgba(255, 247, 235, 0.80);
+      border-color: rgba(128, 0, 32, 0.18);
+      box-shadow: 0 24px 70px rgba(76, 35, 18, 0.15);
+    }
+
+    .title-font {
+      font-family: 'Syne', sans-serif;
+    }
+
+    .field {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid rgba(244, 232, 212, 0.20);
+      padding: 13px 15px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .dark-shell .field {
+      background: rgba(6, 6, 6, 0.55);
+      color: #f3e6d3;
+    }
+
+    .light-shell .field {
+      background: rgba(255,255,255,0.55);
+      color: #16080b;
+      border-color: rgba(128, 0, 32, 0.22);
+    }
+
+    .field:focus {
+      border-color: #be965f;
+      box-shadow: 0 0 0 4px rgba(190, 150, 95, 0.18);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border-radius: 18px;
+      padding: 12px 16px;
+      font-weight: 800;
+      transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+      outline: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn:focus-visible {
+      box-shadow: 0 0 0 4px rgba(190, 150, 95, 0.35);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #800020, #be965f);
+      color: #fff7eb;
+      box-shadow: 0 16px 36px rgba(128, 0, 32, 0.34);
+    }
+
+    .btn-secondary {
+      border: 1px solid rgba(244, 232, 212, 0.18);
+    }
+
+    .dark-shell .btn-secondary {
+      background: rgba(244, 232, 212, 0.08);
+      color: #f3e6d3;
+    }
+
+    .light-shell .btn-secondary {
+      background: rgba(128, 0, 32, 0.08);
+      color: #16080b;
+      border-color: rgba(128, 0, 32, 0.18);
+    }
+
+    .btn-danger {
+      background: rgba(128, 0, 32, 0.16);
+      color: #f3e6d3;
+      border: 1px solid rgba(128, 0, 32, 0.35);
+    }
+
+    .light-shell .btn-danger {
+      color: #800020;
+    }
+
+    .section-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: rgba(190, 150, 95, 0.16);
+      color: #be965f;
+      border: 1px solid rgba(190, 150, 95, 0.26);
+    }
+
+    .lyric-paper {
+      white-space: pre-wrap;
+      line-height: 1.78;
+      border-radius: 24px;
+      padding: 22px;
+      min-height: 360px;
+      border: 1px solid rgba(190, 150, 95, 0.20);
+      transition: background 0.35s ease;
+    }
+
+    .dark-shell .lyric-paper {
+      background: linear-gradient(180deg, rgba(6,6,6,0.56), rgba(128,0,32,0.12));
+    }
+
+    .light-shell .lyric-paper {
+      background: linear-gradient(180deg, rgba(255,255,255,0.52), rgba(190,150,95,0.14));
+    }
+
+    .thinking-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #be965f;
+      animation: pulse 1s infinite ease-in-out;
+    }
+
+    .thinking-dot:nth-child(2) { animation-delay: .15s; }
+    .thinking-dot:nth-child(3) { animation-delay: .30s; }
+
+    @keyframes pulse {
+      0%, 80%, 100% { transform: scale(.72); opacity: .45; }
+      40% { transform: scale(1.1); opacity: 1; }
+    }
+
+    .reveal {
+      animation: revealUp .55s ease both;
+    }
+
+    @keyframes revealUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .history-item {
+      border-radius: 18px;
+      padding: 13px;
+      border: 1px solid rgba(190, 150, 95, 0.18);
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .dark-shell .history-item {
+      background: rgba(6, 6, 6, 0.30);
+    }
+
+    .light-shell .history-item {
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .history-item:hover {
+      border-color: rgba(190, 150, 95, 0.52);
+      transform: translateY(-1px);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 50;
+      transition: all 0.25s ease;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: #800020;
+      color: #fff7eb;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.28);
+      font-weight: 800;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="appShell" class="studio-shell dark-shell h-full w-full">
+   <div class="noise"></div>
+   <header class="relative z-10 px-5 py-5 md:px-8">
+    <div class="mx-auto flex w-full max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
+     <div>
+      <div class="mb-2 flex items-center gap-2"><span class="section-chip"><i data-lucide="sparkles" class="h-4 w-4"></i> LLM Composer</span> <span class="section-chip">Glass 80%</span>
+      </div>
+      <h1 id="appTitle" class="title-font text-4xl font-extrabold tracking-tight md:text-6xl">AI Lyrics Studio</h1>
+      <p id="appSubtitle" class="mt-2 max-w-2xl text-base opacity-80 md:text-lg">Crie letras musicais com IA, refine versos e salve seu histórico criativo.</p>
+     </div><button id="themeToggle" class="btn btn-secondary" type="button" aria-label="Alternar tema claro e escuro"> <i data-lucide="moon" class="h-5 w-5"></i> <span>Tema</span> </button>
+    </div>
+   </header>
+   <main class="relative z-10 px-5 pb-8 md:px-8">
+    <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-5 lg:grid-cols-[410px_1fr]">
+     <section class="glass reveal rounded-[32px] p-5 md:p-6" aria-labelledby="formHeading">
+      <div class="mb-5 flex items-start justify-between gap-3">
+       <div>
+        <h2 id="formHeading" class="title-font text-2xl font-bold">Briefing musical</h2>
+        <p class="mt-1 text-sm opacity-70">Informe a direção da música e deixe o estúdio compor.</p>
+       </div>
+       <div class="rounded-2xl bg-[#800020]/25 p-3 text-[#be965f]"><i data-lucide="music-4" class="h-6 w-6"></i>
+       </div>
+      </div>
+      <form id="lyricsForm" class="space-y-4">
+       <div><label for="themeInput" class="mb-2 block text-sm font-bold">Tema</label> <input id="themeInput" class="field" type="text" placeholder="Ex: amor futurista, superação, saudade..." required>
+       </div>
+       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+        <div><label for="genreInput" class="mb-2 block text-sm font-bold">Gênero musical</label> <select id="genreInput" class="field" required> <option value="Pop">Pop</option> <option value="Rap">Rap</option> <option value="Rock">Rock</option> <option value="Sertanejo">Sertanejo</option> <option value="Funk">Funk</option> <option value="MPB">MPB</option> <option value="Trap">Trap</option> <option value="R&amp;B">R&amp;B</option> <option value="Gospel">Gospel</option> <option value="Eletrônica">Eletrônica</option> </select>
+        </div>
+        <div><label for="moodInput" class="mb-2 block text-sm font-bold">Humor</label> <select id="moodInput" class="field" required> <option value="melancólico">Melancólico</option> <option value="romântico">Romântico</option> <option value="eufórico">Eufórico</option> <option value="sombrio">Sombrio</option> <option value="esperançoso">Esperançoso</option> <option value="nostálgico">Nostálgico</option> <option value="irônico">Irônico</option> </select>
+        </div>
+       </div>
+       <div><label for="keywordsInput" class="mb-2 block text-sm font-bold">Palavras-chave opcionais</label> <input id="keywordsInput" class="field" type="text" placeholder="Ex: lua, neon, estrada, coração...">
+       </div>
+       <div><label for="languageInput" class="mb-2 block text-sm font-bold">Idioma da música</label> <select id="languageInput" class="field" required> <option value="Português">Português</option> <option value="Inglês">Inglês</option> <option value="Espanhol">Espanhol</option> <option value="Francês">Francês</option> <option value="Italiano">Italiano</option> </select>
+       </div><button id="generateBtn" class="btn btn-primary w-full" type="submit"> <i data-lucide="wand-2" class="h-5 w-5"></i> <span id="generateButtonText">Gerar Letra</span> </button>
+       <div id="limitMessage" class="hidden rounded-2xl border border-[#be965f]/30 bg-[#be965f]/10 p-3 text-sm font-bold text-[#be965f]">
+        O limite de 999 letras salvas foi atingido. Apague uma letra do histórico para criar outra.
+       </div>
+      </form>
+      <aside class="mt-5 rounded-[24px] border border-[#be965f]/20 bg-[#be965f]/10 p-4">
+       <h3 class="mb-2 flex items-center gap-2 font-extrabold"><i data-lucide="terminal-square" class="h-5 w-5 text-[#be965f]"></i> Prompt usado</h3>
+       <p id="promptPreview" class="text-sm leading-relaxed opacity-75">Você é um compositor profissional. Crie uma música no gênero Pop, sobre seu tema, com humor melancólico...</p>
+      </aside>
+     </section>
+     <section class="space-y-5">
+      <div class="glass reveal rounded-[32px] p-5 md:p-6" style="animation-delay:.08s" aria-labelledby="outputHeading">
+       <div class="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div>
+         <h2 id="outputHeading" class="title-font text-2xl font-bold">Letra gerada</h2>
+         <p id="outputMeta" class="mt-1 text-sm opacity-70">Aguardando seu briefing musical.</p>
+        </div>
+        <div class="flex flex-wrap gap-2"><button id="copyBtn" class="btn btn-secondary" type="button"> <i data-lucide="copy" class="h-4 w-4"></i> Copiar </button> <button id="exportBtn" class="btn btn-secondary" type="button"> <i data-lucide="download" class="h-4 w-4"></i> Exportar </button>
+        </div>
+       </div>
+       <div id="thinkingBox" class="mb-4 hidden rounded-3xl border border-[#be965f]/25 bg-[#be965f]/10 p-4">
+        <div class="flex items-center gap-3">
+         <div class="flex gap-1"><span class="thinking-dot"></span> <span class="thinking-dot"></span> <span class="thinking-dot"></span>
+         </div><span class="font-extrabold text-[#be965f]">IA pensando, costurando rimas e imagens...</span>
+        </div>
+       </div>
+       <article id="lyricsOutput" class="lyric-paper text-base">
+        Sua letra completa aparecerá aqui, organizada com versos, refrão e ponte musical.
+       </article>
+       <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5"><button class="btn btn-secondary refine-btn" data-action="chorus" type="button"> <i data-lucide="repeat-2" class="h-4 w-4"></i> Novo refrão </button> <button class="btn btn-secondary refine-btn" data-action="continue" type="button"> <i data-lucide="plus-circle" class="h-4 w-4"></i> Continuar </button> <button class="btn btn-secondary refine-btn" data-action="poetic" type="button"> <i data-lucide="feather" class="h-4 w-4"></i> Mais poético </button> <button class="btn btn-secondary refine-btn" data-action="rewrite" type="button"> <i data-lucide="edit-3" class="h-4 w-4"></i> Reescrever versos </button> <button class="btn btn-secondary refine-btn" data-action="rap" type="button"> <i data-lucide="mic-2" class="h-4 w-4"></i> Virar rap </button>
+       </div>
+      </div>
+      <section class="glass reveal rounded-[32px] p-5 md:p-6" style="animation-delay:.16s" aria-labelledby="historyHeading">
+       <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+         <h2 id="historyHeading" class="title-font text-2xl font-bold">Histórico</h2>
+         <p id="historyCount" class="mt-1 text-sm opacity-70">0 letras salvas</p>
+        </div><span class="section-chip"><i data-lucide="database" class="h-4 w-4"></i> Canva Sheet</span>
+       </div>
+       <div id="historyList" class="grid grid-cols-1 gap-3 md:grid-cols-2"></div>
+       <div id="emptyHistory" class="rounded-3xl border border-dashed border-[#be965f]/35 p-6 text-center opacity-75"><i data-lucide="archive" class="mx-auto mb-2 h-8 w-8 text-[#be965f]"></i> Nenhuma letra salva ainda. Gere sua primeira música para aparecer aqui.
+       </div>
+      </section>
+     </section>
+    </div>
+   </main>
+   <footer class="relative z-10 px-5 pb-6 md:px-8">
+    <div class="mx-auto max-w-7xl text-center text-xs opacity-60">
+     Protótipo seguro em arquivo único: a chamada real para OpenAI, Gemini ou Claude deve ficar em um back-end com chave protegida.
+    </div>
+   </footer>
+   <div id="toast" class="toast" role="status" aria-live="polite">
+    Pronto!
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: "#080506",
+      surface_color: "#14080a",
+      text_color: "#f3e6d3",
+      primary_action_color: "#800020",
+      secondary_action_color: "#be965f",
+      font_family: "Syne",
+      font_size: 16,
+      app_title: "AI Lyrics Studio",
+      app_subtitle: "Crie letras musicais com IA, refine versos e salve seu histórico criativo.",
+      generate_button_text: "Gerar Letra",
+      output_title: "Letra gerada",
+      history_title: "Histórico"
+    };
+
+    let currentLyrics = "";
+    let currentMeta = {
+      theme: "",
+      genre: "",
+      mood: "",
+      keywords: "",
+      language: ""
+    };
+    let records = [];
+    let pendingDeleteId = null;
+    let isBusy = false;
+
+    const appShell = document.getElementById("appShell");
+    const lyricsForm = document.getElementById("lyricsForm");
+    const themeInput = document.getElementById("themeInput");
+    const genreInput = document.getElementById("genreInput");
+    const moodInput = document.getElementById("moodInput");
+    const keywordsInput = document.getElementById("keywordsInput");
+    const languageInput = document.getElementById("languageInput");
+    const lyricsOutput = document.getElementById("lyricsOutput");
+    const outputMeta = document.getElementById("outputMeta");
+    const promptPreview = document.getElementById("promptPreview");
+    const thinkingBox = document.getElementById("thinkingBox");
+    const generateBtn = document.getElementById("generateBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const historyList = document.getElementById("historyList");
+    const emptyHistory = document.getElementById("emptyHistory");
+    const historyCount = document.getElementById("historyCount");
+    const toast = document.getElementById("toast");
+    const limitMessage = document.getElementById("limitMessage");
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2300);
+    }
+
+    function setBusy(value) {
+      isBusy = value;
+      generateBtn.disabled = value;
+      generateBtn.classList.toggle("disabled", value);
+      document.querySelectorAll(".refine-btn").forEach(btn => {
+        btn.disabled = value;
+        btn.classList.toggle("disabled", value);
+      });
+      if (value) {
+        thinkingBox.classList.remove("hidden");
+      } else {
+        thinkingBox.classList.add("hidden");
+      }
+    }
+
+    function getFormData() {
+      return {
+        theme: themeInput.value.trim(),
+        genre: genreInput.value,
+        mood: moodInput.value,
+        keywords: keywordsInput.value.trim() || "livre inspiração, imagens fortes, emoção",
+        language: languageInput.value
+      };
+    }
+
+    function updatePromptPreview() {
+      const data = getFormData();
+      promptPreview.textContent = `Você é um compositor profissional. Crie uma música no gênero ${data.genre}, sobre ${data.theme || "[TEMA]"}, com humor ${data.mood}. Inclua versos, refrão, linguagem criativa e palavras-chave: ${data.keywords}. Escreva em ${data.language}.`;
+    }
+
+    [themeInput, genreInput, moodInput, keywordsInput, languageInput].forEach(el => {
+      el.addEventListener("input", updatePromptPreview);
+      el.addEventListener("change", updatePromptPreview);
+    });
+
+    function randomPick(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function createLyrics(data) {
+      const keywordList = data.keywords.split(",").map(k => k.trim()).filter(Boolean);
+      const k1 = keywordList[0] || "neon";
+      const k2 = keywordList[1] || "coração";
+      const k3 = keywordList[2] || "estrada";
+
+      const openers = {
+        "Português": [
+          `Eu vi ${k1} desenhando seu nome no ar`,
+          `Na esquina do tempo, tentei te encontrar`,
+          `Meu peito virou cidade sem farol`
+        ],
+        "Inglês": [
+          `I saw ${k1} writing your name in the air`,
+          `On the edge of time, I searched for you there`,
+          `My heart became a city without light`
+        ],
+        "Espanhol": [
+          `Vi ${k1} dibujando tu nombre en el aire`,
+          `En la orilla del tiempo quise encontrarte`,
+          `Mi pecho fue ciudad sin claridad`
+        ],
+        "Francês": [
+          `J'ai vu ${k1} écrire ton nom dans l'air`,
+          `Au bord du temps, je voulais te refaire`,
+          `Mon cœur devint une ville sans lumière`
+        ],
+        "Italiano": [
+          `Ho visto ${k1} scrivere il tuo nome nell'aria`,
+          `Sul bordo del tempo cercavo la tua scia`,
+          `Il cuore diventò città senza luce`
+        ]
+      };
+
+      const lines = openers[data.language] || openers["Português"];
+
+      if (data.language === "Inglês") {
+        return `[TITLE]
+${data.theme} in ${data.genre}
+
+[VERSE 1]
+${randomPick(lines)}
+With ${k2} burning under quiet rain
+I keep the rhythm of a broken star
+Turning every scar into a refrain
+
+[PRE-CHORUS]
+If the night gets loud, I will sing it low
+If the road gets cold, I will let it glow
+
+[CHORUS]
+Oh, ${data.theme}, take me higher
+In a ${data.mood} fire, in a velvet choir
+Let ${k1} fall, let ${k3} roll
+I make a home inside the sound of my soul
+
+[VERSE 2]
+The city moves like glass beneath my feet
+Every shadow learns the shape of a beat
+I write your name where the silence starts
+And tune the thunder inside two hearts
+
+[BRIDGE]
+Maybe we are echoes dressed as flame
+Maybe every ending learns our name
+But I won't fade, I won't run
+I'll turn the dark into a song unsung
+
+[FINAL CHORUS]
+Oh, ${data.theme}, take me higher
+In a ${data.mood} fire, in a velvet choir
+Let ${k1} fall, let ${k3} roll
+I make a home inside the sound of my soul`;
+      }
+
+      return `[TÍTULO]
+${data.theme} em ${data.genre}
+
+[VERSO 1]
+${randomPick(lines)}
+Com ${k2} aceso tentando explicar
+O silêncio veste um casaco bordô
+E a noite pede coragem pra cantar
+
+[PRÉ-REFRÃO]
+Se o mundo pesar, eu viro som
+Se a dor apertar, eu mudo o tom
+
+[REFRÃO]
+Oh, ${data.theme}, me leva devagar
+Num fogo ${data.mood}, difícil de apagar
+Deixa ${k1} cair, deixa ${k3} passar
+Meu coração faz palco pra recomeçar
+
+[VERSO 2]
+Pelas ruas de vidro da imaginação
+Eu colho faíscas da contramão
+Cada palavra vira constelação
+Cada saudade aprende percussão
+
+[PONTE]
+Talvez a gente seja temporal
+Dois versos fugindo do final
+Mas se a vida desafinar
+Eu dobro a rima até ela brilhar
+
+[REFRÃO FINAL]
+Oh, ${data.theme}, me leva devagar
+Num fogo ${data.mood}, difícil de apagar
+Deixa ${k1} cair, deixa ${k3} passar
+Meu coração faz palco pra recomeçar`;
+    }
+
+    function refineLyrics(action) {
+      if (!currentLyrics) {
+        showToast("Gere uma letra primeiro.");
+        return "";
+      }
+
+      const additions = {
+        chorus: `[NOVO REFRÃO]
+Eu danço no limite entre o breu e o clarão
+Bordô na voz, bege na palma da mão
+Se a vida insiste em me atravessar
+Eu canto mais alto pra não desabar`,
+        continue: `[CONTINUAÇÃO]
+Depois da última nota, ficou um sinal
+Um brilho discreto no temporal
+Segui pela rua sem direção
+Com outra melodia dentro do coração`,
+        poetic: `[VERSÃO MAIS POÉTICA]
+Troquei o asfalto por marfim lunar
+E cada suspiro virou vitral
+A ausência, vestida de âmbar e sal
+Aprendeu meu nome antes de passar`,
+        rewrite: `[VERSOS REESCRITOS]
+Eu caminhei onde a memória arde
+Com a voz bordada em contraluz
+Toda ferida que chegou tarde
+Virou caminho, virou blues`,
+        rap: `[TRANSFORMAÇÃO EM RAP]
+Beat pesado, mente acesa, sigo sem recuar
+Bordô no pulso, minha história vai rimar
+Tema na veia, verdade no olhar
+Se tentam me parar, eu faço o grave levantar`
+      };
+
+      return `${currentLyrics}\n\n${additions[action]}`;
+    }
+
+    async function saveLyrics(data, lyrics) {
+      if (!window.dataSdk) {
+        showToast("Histórico indisponível no momento.");
+        return;
+      }
+
+      if (records.length >= 999) {
+        limitMessage.classList.remove("hidden");
+        showToast("Limite de histórico atingido.");
+        return;
+      }
+
+      const title = `${data.genre} sobre ${data.theme}`.slice(0, 80);
+      const result = await window.dataSdk.create({
+        title,
+        theme: data.theme,
+        genre: data.genre,
+        mood: data.mood,
+        keywords: data.keywords,
+        language: data.language,
+        lyrics,
+        created_at: new Date().toISOString()
+      });
+
+      if (result.isOk) {
+        showToast("Letra salva no histórico.");
+      } else {
+        showToast("Não foi possível salvar agora.");
+      }
+    }
+
+    lyricsForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (isBusy) return;
+
+      const data = getFormData();
+      if (!data.theme) {
+        showToast("Digite um tema para a música.");
+        themeInput.focus();
+        return;
+      }
+
+      setBusy(true);
+      outputMeta.textContent = `Gerando ${data.genre} em ${data.language} • humor ${data.mood}`;
+
+      setTimeout(async () => {
+        currentMeta = data;
+        currentLyrics = createLyrics(data);
+        lyricsOutput.textContent = currentLyrics;
+        outputMeta.textContent = `${data.genre} • ${data.mood} • ${data.language}`;
+        setBusy(false);
+        await saveLyrics(data, currentLyrics);
+      }, 1300);
+    });
+
+    document.querySelectorAll(".refine-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        if (isBusy) return;
+        const action = button.dataset.action;
+        setBusy(true);
+        setTimeout(() => {
+          currentLyrics = refineLyrics(action);
+          if (currentLyrics) {
+            lyricsOutput.textContent = currentLyrics;
+            outputMeta.textContent = `Letra refinada • ${currentMeta.genre || "Estúdio"}`;
+            showToast("Refinamento aplicado.");
+          }
+          setBusy(false);
+        }, 850);
+      });
+    });
+
+    copyBtn.addEventListener("click", async () => {
+      if (!currentLyrics) {
+        showToast("Não há letra para copiar.");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(currentLyrics);
+        showToast("Letra copiada.");
+      } catch (error) {
+        showToast("Não foi possível copiar.");
+      }
+    });
+
+    exportBtn.addEventListener("click", () => {
+      if (!currentLyrics) {
+        showToast("Não há letra para exportar.");
+        return;
+      }
+
+      const blob = new Blob([currentLyrics], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "ai-lyrics-studio-letra.txt";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast("Arquivo exportado.");
+    });
+
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      appShell.classList.toggle("dark-shell");
+      appShell.classList.toggle("light-shell");
+      const isDark = appShell.classList.contains("dark-shell");
+      document.getElementById("themeToggle").innerHTML = isDark
+        ? '<i data-lucide="moon" class="h-5 w-5"></i><span>Tema</span>'
+        : '<i data-lucide="sun" class="h-5 w-5"></i><span>Tema</span>';
+      lucide.createIcons();
+    });
+
+    function createHistoryElement(record) {
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.dataset.recordId = record.__backendId;
+
+      const date = record.created_at ? new Date(record.created_at) : new Date();
+      const formatted = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+
+      item.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="truncate font-extrabold">${escapeHtml(record.title || "Letra sem título")}</h3>
+            <p class="mt-1 text-xs opacity-70">${escapeHtml(record.genre || "")} • ${escapeHtml(record.language || "")} • ${formatted}</p>
+          </div>
+          <button class="delete-history btn btn-danger !p-2" type="button" aria-label="Apagar letra">
+            <i data-lucide="trash-2" class="h-4 w-4"></i>
+          </button>
+        </div>
+        <p class="mt-2 line-clamp-2 text-sm opacity-75">${escapeHtml((record.lyrics || "").replace(/\n/g, " ").slice(0, 120))}</p>
+        <div class="confirm-delete mt-3 hidden grid-cols-2 gap-2">
+          <button class="confirm-delete-btn btn btn-danger text-sm" type="button">Confirmar</button>
+          <button class="cancel-delete-btn btn btn-secondary text-sm" type="button">Cancelar</button>
+        </div>
+      `;
+
+      item.addEventListener("click", (event) => {
+        if (event.target.closest("button")) return;
+        currentLyrics = record.lyrics || "";
+        currentMeta = {
+          theme: record.theme || "",
+          genre: record.genre || "",
+          mood: record.mood || "",
+          keywords: record.keywords || "",
+          language: record.language || ""
+        };
+        lyricsOutput.textContent = currentLyrics || "Letra vazia.";
+        outputMeta.textContent = `${record.genre || "Gênero"} • ${record.mood || "humor"} • ${record.language || "idioma"}`;
+        showToast("Letra carregada.");
+      });
+
+      item.querySelector(".delete-history").addEventListener("click", () => {
+        pendingDeleteId = record.__backendId;
+        item.querySelector(".confirm-delete").classList.remove("hidden");
+        item.querySelector(".confirm-delete").classList.add("grid");
+      });
+
+      item.querySelector(".cancel-delete-btn").addEventListener("click", () => {
+        pendingDeleteId = null;
+        item.querySelector(".confirm-delete").classList.add("hidden");
+        item.querySelector(".confirm-delete").classList.remove("grid");
+      });
+
+      item.querySelector(".confirm-delete-btn").addEventListener("click", async () => {
+        if (!window.dataSdk || pendingDeleteId !== record.__backendId) return;
+        const btn = item.querySelector(".confirm-delete-btn");
+        btn.textContent = "Apagando...";
+        btn.disabled = true;
+
+        const result = await window.dataSdk.delete(record);
+        if (result.isOk) {
+          showToast("Letra apagada.");
+          pendingDeleteId = null;
+        } else {
+          showToast("Não foi possível apagar.");
+          btn.textContent = "Confirmar";
+          btn.disabled = false;
+        }
+      });
+
+      return item;
+    }
+
+    function updateHistoryElement(element, record) {
+      const fresh = createHistoryElement(record);
+      element.replaceWith(fresh);
+    }
+
+    function renderHistory(data) {
+      records = [...data].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      historyCount.textContent = `${records.length} ${records.length === 1 ? "letra salva" : "letras salvas"}`;
+      emptyHistory.classList.toggle("hidden", records.length > 0);
+      limitMessage.classList.toggle("hidden", records.length < 999);
+
+      const existing = new Map([...historyList.children].map(el => [el.dataset.recordId, el]));
+
+      records.forEach(record => {
+        const id = record.__backendId;
+        if (existing.has(id)) {
+          updateHistoryElement(existing.get(id), record);
+          existing.delete(id);
+        } else {
+          historyList.appendChild(createHistoryElement(record));
+        }
+      });
+
+      existing.forEach(el => el.remove());
+      lucide.createIcons();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    const dataHandler = {
+      onDataChanged(data) {
+        renderHistory(data);
+      }
+    };
+
+    async function initData() {
+      if (!window.dataSdk) {
+        showToast("Histórico não carregado.");
+        return;
+      }
+
+      const result = await window.dataSdk.init(dataHandler);
+      if (!result.isOk) {
+        showToast("Não foi possível iniciar o histórico.");
+      }
+    }
+
+    function applyConfig(config) {
+      const cfg = { ...defaultConfig, ...config };
+      const fontStack = `${cfg.font_family}, Syne, Manrope, sans-serif`;
+      const base = Number(cfg.font_size) || defaultConfig.font_size;
+
+      document.getElementById("appTitle").textContent = cfg.app_title;
+      document.getElementById("appSubtitle").textContent = cfg.app_subtitle;
+      document.getElementById("generateButtonText").textContent = cfg.generate_button_text;
+      document.getElementById("outputHeading").textContent = cfg.output_title;
+      document.getElementById("historyHeading").textContent = cfg.history_title;
+
+      appShell.style.color = cfg.text_color;
+      document.body.style.fontFamily = `${cfg.font_family}, Manrope, sans-serif`;
+
+      document.querySelectorAll(".title-font").forEach(el => {
+        el.style.fontFamily = fontStack;
+      });
+
+      document.getElementById("appTitle").style.fontSize = `${base * 2.75}px`;
+      document.getElementById("appSubtitle").style.fontSize = `${base * 1.05}px`;
+      document.querySelectorAll("h2").forEach(el => el.style.fontSize = `${base * 1.5}px`);
+      document.querySelectorAll("h3, label, button").forEach(el => el.style.fontSize = `${base * 0.9}px`);
+      document.querySelectorAll("p, input, select, article").forEach(el => el.style.fontSize = `${base}px`);
+      document.querySelectorAll(".text-xs").forEach(el => el.style.fontSize = `${base * 0.75}px`);
+      document.querySelectorAll(".text-sm").forEach(el => el.style.fontSize = `${base * 0.875}px`);
+
+      document.querySelectorAll(".glass").forEach(el => {
+        el.style.borderColor = `${cfg.secondary_action_color}33`;
+      });
+
+      document.querySelectorAll(".btn-primary").forEach(el => {
+        el.style.background = `linear-gradient(135deg, ${cfg.primary_action_color}, ${cfg.secondary_action_color})`;
+      });
+
+      document.querySelectorAll(".section-chip").forEach(el => {
+        el.style.color = cfg.secondary_action_color;
+        el.style.borderColor = `${cfg.secondary_action_color}44`;
+        el.style.backgroundColor = `${cfg.secondary_action_color}22`;
+      });
+
+      document.querySelectorAll(".lyric-paper").forEach(el => {
+        el.style.borderColor = `${cfg.secondary_action_color}33`;
+      });
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          applyConfig(config);
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => {
+                config.background_color = value;
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            },
+            {
+              get: () => config.surface_color || defaultConfig.surface_color,
+              set: (value) => {
+                config.surface_color = value;
+                window.elementSdk.setConfig({ surface_color: value });
+              }
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => {
+                config.text_color = value;
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            },
+            {
+              get: () => config.primary_action_color || defaultConfig.primary_action_color,
+              set: (value) => {
+                config.primary_action_color = value;
+                window.elementSdk.setConfig({ primary_action_color: value });
+              }
+            },
+            {
+              get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+              set: (value) => {
+                config.secondary_action_color = value;
+                window.elementSdk.setConfig({ secondary_action_color: value });
+              }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => {
+              config.font_family = value;
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => {
+              config.font_size = value;
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["app_title", config.app_title || defaultConfig.app_title],
+          ["app_subtitle", config.app_subtitle || defaultConfig.app_subtitle],
+          ["generate_button_text", config.generate_button_text || defaultConfig.generate_button_text],
+          ["output_title", config.output_title || defaultConfig.output_title],
+          ["history_title", config.history_title || defaultConfig.history_title]
+        ])
+      });
+    } else {
+      applyConfig(defaultConfig);
+    }
+
+    updatePromptPreview();
+    initData();
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9fffc22b2f196c1e',t:'MTc3OTQ5NDE5Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
